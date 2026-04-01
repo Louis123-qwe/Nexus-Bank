@@ -375,16 +375,20 @@
 .notif-dropdown {
   display: none;
   position: absolute;
-  top: 45px;
-  right: 0;
-  width: 280px;
+  top: 50px;
+  right: 0.5px;
+  width: 320px; /* Assume fixed width for desktop */
+  max-width: 90vw; /* Take 90% of screen width on small mobile devices */
   background: var(--navy-mid);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: var(--shadow);
   z-index: 1000;
-  overflow: hidden;
+  max-height: 450px;
+  overflow-y: auto;
+  backdrop-filter: blur(20px);
 }
+
 .notif-dropdown.show {
   display: block;
   animation: fadeUp 0.2s ease;
@@ -472,7 +476,10 @@
       <div class="nav-item" data-page="transfer" onclick="navigate('transfer')"><span class="icon">↔</span> Transfer Money</div>
       <div class="nav-item" data-page="history" onclick="navigate('history')"><span class="icon">≡</span> Transactions</div>
       <div class="nav-item" data-page="settings" onclick="navigate('settings')"><span class="icon">◎</span> Settings</div>
-      
+      <div class="nav-item" data-page="contact" onclick="navigate('contact')">
+  <span class="icon">✉</span> Support & Feedback
+</div>
+
     </nav>
     
     <div class="sidebar-footer">
@@ -705,6 +712,37 @@
         </div>
       </div>
     </div>
+    <div class="page" id="page-contact">
+  <div class="card" style="max-width: 580px; margin: 0 auto;">
+    <div class="card-header"><h3>Contact Admin</h3></div>
+    <div class="card-body">
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+        Submit your complaints, suggestions, or account inquiries below.
+      </p>
+      
+      <div class="form-group">
+        <label>Category</label>
+        <select id="contact-subject">
+          <option value="General Inquiry">General Inquiry</option>
+          <option value="Transaction Issue">Transaction Issue</option>
+          <option value="Suggestion">Suggestion</option>
+          <option value="Complaint">Complaint</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Message</label>
+        <textarea id="contact-message" rows="5" 
+          style="width: 100%; padding: 12px; background: var(--navy); border: 1px solid var(--border); border-radius: 10px; color: white; font-family: inherit; outline: none; resize: none;" 
+          placeholder="Type your message here..."></textarea>
+      </div>
+
+      <button class="btn btn-primary" onclick="submitContactForm()" id="contact-btn">Send Message</button>
+      <div class="msg" id="contact-msg"></div>
+    </div>
+  </div>
+</div>
+
 
   </main>
 </div>
@@ -744,7 +782,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, orderBy, addDoc, serverTimestamp, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, orderBy, addDoc, serverTimestamp, runTransaction, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBI8C8Q3n20eA53qDkP2Xnru_NrTztzJuE",
@@ -1548,29 +1586,38 @@ window.generateStatement = () => {
 };
 
 
-window.toggleNotifs = () => {
+// REPLACEMENT: Updated Toggle with "Mark as Read" logic
+window.toggleNotifs = async () => {
   const dropdown = document.getElementById('notif-dropdown');
   const badge = document.getElementById('notif-badge');
   
+  const isOpening = !dropdown.classList.contains('show');
   dropdown.classList.toggle('show');
-  
-  // Optional: Clear badge when opened
-  if (dropdown.classList.contains('show')) {
-    badge.style.display = 'none';
+
+  // If we are opening the dropdown, mark all unread notifs as read in the DB
+  if (isOpening && currentUser) {
+    try {
+      const q = query(
+        collection(db, 'notifications'),
+        where('userId', '==', currentUser.uid),
+        where('read', '==', false)
+      );
+      
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const batch = writeBatch(db);
+        snap.docs.forEach((d) => {
+          batch.update(d.ref, { read: true });
+        });
+        await batch.commit();
+        // The onSnapshot listener below will automatically update the UI
+      }
+    } catch (e) {
+      console.error("Error clearing notifications:", e);
+    }
   }
 };
 
-// Close dropdown when clicking anywhere else
-window.addEventListener('click', (e) => {
-  if (!e.target.closest('.notif-wrapper')) {
-    document.getElementById('notif-dropdown').classList.remove('show');
-  }
-});
-
-
-
-
-// Call this function inside your onAuthStateChanged after the user logs in
 function listenForNotifications(uid) {
   const q = query(
     collection(db, 'notifications'),
@@ -1578,14 +1625,13 @@ function listenForNotifications(uid) {
     orderBy('timestamp', 'desc')
   );
 
-  // This "onSnapshot" stays open and listens for new messages automatically
   onSnapshot(q, (snapshot) => {
     const container = document.getElementById('notif-list-container');
-    const badge = document.getElementById('notif-badge'); // The red dot/number on the bell
+    const badge = document.getElementById('notif-badge');
     let unreadCount = 0;
 
     if (snapshot.empty) {
-      container.innerHTML = '<div class="notif-item" style="text-align:center; opacity:0.5;">No notifications</div>';
+      container.innerHTML = '<div class="notif-item" style="text-align:center; opacity:0.5; padding:20px;">No notifications yet.</div>';
       if(badge) badge.style.display = 'none';
       return;
     }
@@ -1594,11 +1640,16 @@ function listenForNotifications(uid) {
       const data = doc.data();
       if (!data.read) unreadCount++;
       
+      // Dynamic styling: Unread messages get a blue glow and a side-border
+      const unreadStyle = !data.read 
+        ? 'background: var(--blue-glow); border-left: 3px solid var(--blue);' 
+        : 'opacity: 0.7;';
+
       return `
-        <div class="notif-item ${data.read ? '' : 'unread'}" 
-             style="padding:12px; border-bottom:1px solid var(--border); ${data.read ? '' : 'background:rgba(30,107,255,0.05);'}">
-          <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px;">
-            ${data.timestamp ? fmtDate(data.timestamp) : 'Just now'}
+        <div class="notif-item" style="padding:14px; border-bottom:1px solid var(--border); transition: 0.3s; ${unreadStyle}">
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px; display:flex; justify-content:space-between;">
+            <span>${data.timestamp ? fmtDate(data.timestamp) : 'Just now'}</span>
+            ${!data.read ? '<span style="color:var(--blue); font-weight:bold;">●</span>' : ''}
           </div>
           <div style="font-size:13px; color:var(--text); line-height:1.4;">${data.message}</div>
         </div>
@@ -1607,13 +1658,13 @@ function listenForNotifications(uid) {
 
     container.innerHTML = html;
 
-    // Update the notification badge UI
     if (badge) {
       badge.textContent = unreadCount;
       badge.style.display = unreadCount > 0 ? 'flex' : 'none';
     }
   });
 }
+
 
 window.handleForgotPassword = async () => {
   const email = document.getElementById('login-email').value.trim();
@@ -1630,6 +1681,43 @@ window.handleForgotPassword = async () => {
     showMsg('login-msg', friendlyError(e.code), 'error');
   }
 };
+
+// Function to handle the form submission
+async function submitContactForm() {
+  const subject = document.getElementById('contact-subject').value;
+  const message = document.getElementById('contact-message').value.trim();
+
+  if (!message) return showMsg('contact-msg', 'Please enter a message.', 'error');
+
+  setLoading('contact-btn', true, 'Sending...');
+
+  try {
+    await addDoc(collection(db, "support_tickets"), {
+      userId: currentUser.uid,
+      userName: currentUserData.name,
+      userEmail: currentUserData.email,
+      subject: subject,
+      message: message,
+      status: "open",
+      timestamp: serverTimestamp()
+    });
+
+    document.getElementById('contact-message').value = '';
+    showMsg('contact-msg', 'Message sent! We will review it shortly.', 'success');
+    showToast("Ticket submitted");
+  } catch (e) {
+    console.error(e);
+    showMsg('contact-msg', 'Error sending message.', 'error');
+  } finally {
+    setLoading('contact-btn', false, 'Send Message');
+  }
+}
+
+// Attach to window so the button can see it
+window.submitContactForm = submitContactForm;
+
+// Update the navigate function titles list (around line 630 in your code)
+// Add 'contact: Support' to the titles object inside window.navigate
 
 
 
