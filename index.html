@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -415,6 +416,51 @@
   border-bottom: none;
 }
 
+/* The Shake/Shock Penalty Animation */
+.shake-penalty {
+  animation: shockEffect 0.5s ease;
+}
+
+@keyframes shockEffect {
+  0% { transform: translateX(0); color: #ff4757; }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-8px); }
+  80% { transform: translateX(8px); }
+  100% { transform: translateX(0); }
+}
+.stock-card {
+  background: var(--navy);
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.stk-symbol { font-weight: 700; color: var(--blue); display: block; }
+.stk-price { font-family: 'DM Mono', monospace; font-size: 14px; transition: color 0.3s; }
+
+.trade-active-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--glass);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  border-left: 4px solid var(--gold);
+}
+.balance-h {
+    background: linear-gradient(135deg, #0d2452 0%, #0a1f40 50%, #0d1f3a 100%);
+    border: 1px solid rgba(30,107,255,0.2);
+    border-radius: 20px; padding: 32px; position: relative; overflow: hidden; margin-bottom: 24px;
+  }
+  .balance-h::before {
+    content: ''; position: absolute; top: -60px; right: -60px; width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(30,107,255,0.25), transparent 70%); border-radius: 50%;
+  }
+  .balance-h::after {
+    content: ''; position: absolute; bottom: -40px; left: 30%; width: 160px; height: 160px;
+
+
 
 </style>
 </head>
@@ -479,6 +525,10 @@
       <div class="nav-item" data-page="contact" onclick="navigate('contact')">
   <span class="icon">✉</span> Support & Feedback
 </div>
+<div class="nav-item" data-page="stocks" onclick="navigate('stocks')">
+    <span class="icon">📈</span> Wealth & Stocks
+</div>
+
 
     </nav>
     
@@ -535,7 +585,36 @@
             <div class="bmv" style="font-family:'DM Sans',sans-serif"><span class="status-dot"></span><span id="dash-status">Active</span></div>
           </div>
         </div>
+        
       </div>
+      <div class="card" style="margin-top: 20px; border: 1px solid var(--blue-glow);">
+  <div class="card-header"><h3>Wealth Lab: The 50/30/20 Rule</h3></div>
+  <div class="card-body">
+    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">
+      Financial Literacy: A healthy balance sheet allocates your money like this:
+    </p>
+    <div style="display: flex; gap: 4px; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 20px; background: var(--navy);">
+      <div style="width: 50%; background: var(--blue);" title="Needs (50%)"></div>
+      <div style="width: 30%; background: var(--gold);" title="Wants (30%)"></div>
+      <div style="width: 20%; background: var(--accent);" title="Savings (20%)"></div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 11px; text-align: center; gap: 10px;">
+      <div style="background: var(--glass); padding: 8px; border-radius: 8px;">
+        <div style="color: var(--blue); font-weight: bold; margin-bottom: 4px;">Needs (50%)</div>
+        <div style="font-family: 'DM Mono';">Essential bills & food</div>
+      </div>
+      <div style="background: var(--glass); padding: 8px; border-radius: 8px;">
+        <div style="color: var(--gold); font-weight: bold; margin-bottom: 4px;">Wants (30%)</div>
+        <div style="font-family: 'DM Mono';">Hobbies & fun</div>
+      </div>
+      <div style="background: var(--glass); padding: 8px; border-radius: 8px;">
+        <div style="color: var(--accent); font-weight: bold; margin-bottom: 4px;">Savings (20%)</div>
+        <div style="font-family: 'DM Mono';">Investing & safety</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
       <div class="stat-grid">
         <div class="stat-card">
@@ -558,6 +637,13 @@
           <div class="s-label">Total Received</div>
           <div class="s-val accent" id="dash-recv">$0.00</div>
         </div>
+         <div class="stat-card">
+  <div class="s-icon">🎯</div>
+  <div class="s-label">Trust Score (Credit)</div>
+  <div class="s-val" id="dash-credit-score" style="color: var(--gold);">600</div>
+  <div id="credit-status" style="font-size: 11px; margin-top: 5px; opacity: 0.8;">Loading...</div>
+</div>
+
         <div class="card">
   <div class="card-header"><h3>Your Active Loans</h3></div>
   <div class="card-body">
@@ -742,6 +828,77 @@
     </div>
   </div>
 </div>
+<div class="page" id="page-stocks">
+     <div class="balance-hero" style="background: linear-gradient(135deg, #1a3456 0%, #0a1628 100%); border-color: var(--blue);">
+           
+    
+    <div class="wallet-section" style="margin-bottom: 30px;">
+       
+            
+           
+        
+         <div class="bh-label">Investment Wallet</div>
+            <div class="bh-amount" id="stock-balance-display">$0.00</div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">This balance is separate from your Savings account.</p>
+            
+            <div class="transfer-container" style="margin-top: 20px; display: flex; gap: 10px;">
+                <input type="number" id="stk-transfer-amount" placeholder="Amount" style="width: 120px; padding: 8px; border-radius: 8px; background: var(--navy); border: 1px solid var(--border); color: white;">
+                <button id="stk-deposit-btn" onclick="transferToStock()" class="btn btn-primary btn-sm">Deposit</button>
+                <button id="stk-withdraw-btn" onclick="transferToMain()" class="btn btn-ghost btn-sm">Withdraw</button>
+          
+        </div>
+        
+          <hr style="border: 20px; border-top: 1px solid var(--border); margin: 25px ; opacity: 0.3;">
+            
+  
+   
+
+    <div class="market-section">
+        <div class="stat-grid">
+            <div class="card" style="grid-column: span 2;">
+                <div class="card-header"><h3>Live Market Readings</h3></div>
+                <div class="card-body">
+                    <div id="market-grid" class="stock-market-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; max-height: 300px; overflow-y: auto;">
+                        </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3>Quick Trade</h3></div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Select Asset</label>
+                        <select id="stk-asset-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (USD)</label>
+                        <input type="number" id="stk-invest-amount" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Contract Duration</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="number" id="stk-duration" value="10" style="flex: 1;">
+                            <select id="stk-unit" style="flex: 1;">
+                                <option value="seconds">Secs</option>
+                                <option value="minutes">Mins</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="executeStockTrade()" class="btn btn-primary" style="width: 100%;">Open Contract</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 24px;">
+        <div class="card-header"><h3>Active Contracts</h3></div>
+        <div class="card-body" id="active-stocks-list">
+            <p style="text-align: center; color: var(--text-muted);">No active trades</p>
+        </div>
+    </div>
+
+
+
 
 
   </main>
@@ -782,7 +939,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, orderBy, addDoc, serverTimestamp, runTransaction, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, orderBy, addDoc, serverTimestamp, runTransaction, onSnapshot, writeBatch, updateDoc, increment} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBI8C8Q3n20eA53qDkP2Xnru_NrTztzJuE",
@@ -903,6 +1060,7 @@ window.handleSignup = async () => {
     await setDoc(doc(db, 'users', cred.user.uid), {
       uid: cred.user.uid, name, email,
       role: 'user', balance: 15.5,
+      stockBalance: 0,
       accountNumber: await generateUniqueAccountNumber(), accountType: 'Savings',
       status: 'active', createdAt: serverTimestamp()
     });
@@ -915,44 +1073,79 @@ window.handleSignup = async () => {
 window.handleLogout = async () => { await signOut(auth); };
 
 onAuthStateChanged(auth, async (user) => {
+  const authScreen = document.getElementById('auth-screen');
+  const appScreen = document.getElementById('app');
+
   if (user) {
     currentUser = user;
-    listenForNotifications(user .uid);
+    listenForNotifications(user.uid);
     displayUserLoans(); 
+    listenForActiveTrades(user.uid);
+    
 
-    // 1. Try to get the document
-    let snap = await getDoc(doc(db, 'users', user.uid));
+    // REAL-TIME SNAPSHOT: This watches the user document for changes
+    onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        currentUserData = data; 
+        
+    document.getElementById('stock-balance-display').textContent = fmt(data.stockBalance || 0);
+    renderMarketUI();
+    
 
-    // 2. If it's missing, wait 1 second and try one more time 
-    // (This gives the Signup function time to finish the setDoc)
-    if (!snap.exists()) {
-      await new Promise(resolve => setTimeout(resolve, 1500)); 
-      snap = await getDoc(doc(db, 'users', user.uid));
+
+        // 1. Update All Balance Displays
+        const formattedBal = fmt(data.balance || 0);
+        if (document.getElementById('dash-balance')) document.getElementById('dash-balance').textContent = formattedBal;
+        if (document.getElementById('topbar-balance')) document.getElementById('topbar-balance').textContent = formattedBal;
+
+        // 2. Update the Credit Score (Triggers the Shock Penalty)
+        updateCreditUI(data.creditScore || 600); 
+
+        // 3. Fill the Dashboard Labels (Prevents "—" or blanks)
+        if (document.getElementById('sb-name')) document.getElementById('sb-name').textContent = data.name;
+        if (document.getElementById('dash-greeting')) document.getElementById('dash-greeting').textContent = 'Welcome back, ' + data.name.split(' ')[0];
+        if (document.getElementById('dash-acctnum')) document.getElementById('dash-acctnum').textContent = data.accountNumber;
+        if (document.getElementById('dash-type')) document.getElementById('dash-type').textContent = data.accountType;
+        if (document.getElementById('dash-status')) document.getElementById('dash-status').textContent = data.status;
+
+        // 4. Fill the Settings Page Labels
+        if (document.getElementById('set-name')) document.getElementById('set-name').textContent = data.name;
+        if (document.getElementById('set-email')) document.getElementById('set-email').textContent = data.email;
+        if (document.getElementById('set-acctnum')) document.getElementById('set-acctnum').textContent = data.accountNumber;
+        
+       
+
+    // FIX: Update Stock Wallet Balance
+    const sBal = data.stockBalance || 0;
+    const stockDisplay = document.getElementById('stock-balance-display');
+    if (stockDisplay) {
+      stockDisplay.textContent = fmt(sBal);
     }
 
-    // 3. Only if it STILL doesn't exist do we show the warning
-    if (!snap.exists()) {
-      console.warn("User document not found after retry.");
-      // Optional: showMsg('login-msg', 'Account initializing, please sign in again.', 'error');
-      await signOut(auth);
-      return;
-    }
+        // 5. Show/Hide Admin Link
+        const adminWrap = document.getElementById('admin-link-wrap');
+        if (adminWrap) adminWrap.style.display = data.role === 'admin' ? '' : 'none';
 
-    currentUserData = snap.data();
-    updateUI();
-
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').classList.add('visible');
-    document.getElementById('app').style.display = 'flex';
+        // Switch Screens
+        authScreen.style.display = 'none';
+        appScreen.style.display = 'flex';
+        appScreen.classList.add('visible');
+        
+        // Load history once data is ready
+        loadRecentTransactions();
+      }
+    });
 
   } else {
     currentUser = null;
     currentUserData = null;
-    document.getElementById('auth-screen').style.display = '';
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('app').classList.remove('visible');
+    authScreen.style.display = 'flex';
+    appScreen.style.display = 'none';
+    appScreen.classList.remove('visible');
   }
 });
+
 
 async function loadUserData() {
   const snap = await getDoc(doc(db, 'users', currentUser.uid));
@@ -979,6 +1172,8 @@ function updateUI() {
   document.getElementById('set-since').textContent = d.createdAt ? fmtDate(d.createdAt) : '—';
   if (d.role === 'admin') document.getElementById('admin-link-wrap').style.display = '';
   loadRecentTransactions();
+  updateCreditUI(d.creditScore || 600);
+loadRecentTransactions();
 }
 
 // ── Nav ──
@@ -1275,37 +1470,46 @@ function renderTable(txs) {
 
 
 window.requestLoan = async () => {
-  const amount = parseFloat(document.getElementById('loan-amount').value);
-  const desc = document.getElementById('loan-desc').value.trim();
-  
-  if (!amount || amount < 10) return showMsg('loan-msg', 'Minimum loan request is $10.00', 'error');
-  if (!desc) return showMsg('loan-msg', 'Please provide a reason for the request.', 'error');
+  const amountInput = document.getElementById('loan-amount');
+  const descInput = document.getElementById('loan-desc');
+  const amount = parseFloat(amountInput.value);
+  const desc = descInput.value.trim();
 
-  setLoading('loan-btn', true, 'Submitting...');
+  if (!amount || amount < 10) return showMsg('loan-msg', 'Minimum loan is $10.00', 'error');
+
+  setLoading('loan-btn', true, 'Processing...');
 
   try {
+    // 1. APPLY THE IMPACT IMMEDIATELY
+    const currentScore = currentUserData.creditScore || 600;
+    const newScore = Math.max(300, currentScore - 15); // Drop 15 points for taking debt
+    
+    // Update the user document
+    await updateDoc(doc(db, 'users', currentUser.uid), { 
+      creditScore: newScore 
+    });
+
+    // 2. LOG THE LOAN REQUEST
     await addDoc(collection(db, "requests"), {
       userId: currentUser.uid,
       userName: currentUserData.name,
-      userEmail: currentUserData.email,
-      accountNumber: currentUserData.accountNumber,
       amount: amount,
       description: desc,
-      status: "pending", // Important: Admin will change this to 'approved'
-      type: "loan_request",
+      status: "pending", 
       timestamp: serverTimestamp()
     });
 
-    document.getElementById('loan-amount').value = '';
-    document.getElementById('loan-desc').value = '';
-    showMsg('loan-msg', 'Request submitted! Awaiting admin approval.', 'success');
+    showMsg('loan-msg', 'Loan requested! Score adjusted for new debt.', 'success');
+    amountInput.value = '';
+    descInput.value = '';
+
   } catch (e) {
-    showMsg('loan-msg', 'Failed to submit request.', 'error');
+    console.error("LOAN ERROR:", e);
+    showMsg('loan-msg', 'Error: ' + e.message, 'error');
   }
+  
   setLoading('loan-btn', false, 'Submit Request');
 };
-
-
 
 window.changePassword = async () => {
   const cur = document.getElementById('pw-current').value;
@@ -1456,11 +1660,18 @@ window.handleRepayment = async (loanId, amount) => {
       const currentBalance = userSnap.data().balance || 0;
       const currentVault = vaultSnap.data().balance || 0;
 
+const currentScore = userSnap.data().creditScore || 600;
+
+
       if (currentBalance < amount) {
         throw "Insufficient balance to repay this loan.";
       }
 
-      transaction.update(userRef, { balance: currentBalance - amount });
+      transaction.update(userRef, { 
+  balance: currentBalance - amount,
+  creditScore: Math.min(850, currentScore + 15) // Adds 15 points
+});
+
       transaction.update(vaultRef, { balance: currentVault + amount });
       transaction.update(loanRef, { status: "paid" });
     });
@@ -1640,6 +1851,7 @@ function listenForNotifications(uid) {
       const data = doc.data();
       if (!data.read) unreadCount++;
       
+      
       // Dynamic styling: Unread messages get a blue glow and a side-border
       const unreadStyle = !data.read 
         ? 'background: var(--blue-glow); border-left: 3px solid var(--blue);' 
@@ -1713,20 +1925,278 @@ async function submitContactForm() {
   }
 }
 
-// Attach to window so the button can see it
+// Variable to track the score for the "Shock" effect
+let lastScore = null;
+
+function updateCreditUI(score) {
+  const scoreEl = document.getElementById('dash-credit-score');
+  const statusEl = document.getElementById('credit-status');
+  const loanBtn = document.getElementById('loan-btn');
+
+  if (!scoreEl) return;
+
+  // --- SHOCK PENALTY LOGIC ---
+  // If the new score is lower than the previous one, trigger the shake
+  if (lastScore !== null && score < lastScore) {
+    scoreEl.classList.remove('shake-penalty'); // Reset if already there
+    void scoreEl.offsetWidth; // Trigger reflow to restart animation
+    scoreEl.classList.add('shake-penalty');
+    
+    // Optional: play a subtle haptic or sound here if desired
+    console.log("Credit Penalty Detected!");
+  }
+  lastScore = score; 
+
+  // Update the Number
+  scoreEl.textContent = score;
+
+  // --- STATUS & COLOR LOGIC ---
+  if (score >= 750) {
+    scoreEl.style.color = "#00ff88"; // Excellent (Green)
+    statusEl.textContent = "Excellent";
+  } else if (score >= 600) {
+    scoreEl.style.color = "#f1c40f"; // Fair (Gold)
+    statusEl.textContent = "Fair";
+  } else {
+    scoreEl.style.color = "#ff4757"; // Poor (Red)
+    statusEl.textContent = "Poor";
+  }
+
+  // --- BUTTON LOCK LOGIC ---
+  if (loanBtn) {
+    if (score < 500) {
+      loanBtn.disabled = true;
+      loanBtn.style.opacity = "0.5";
+      loanBtn.textContent = "Score too low";
+    } else {
+      loanBtn.disabled = false;
+      loanBtn.style.opacity = "1";
+      loanBtn.textContent = "Submit Request";
+    }
+  }
+}
+
+// 1. STOCK DATA
+const stockList = [
+    { symbol: 'AAPL', name: 'Apple', price: 182.40 },
+    { symbol: 'TSLA', name: 'Tesla', price: 215.10 },
+    { symbol: 'NVDA', name: 'Nvidia', price: 620.45 },
+    { symbol: 'BTC', name: 'Bitcoin', price: 51200 },
+    { symbol: 'ETH', name: 'Ethereum', price: 2950 },
+    { symbol: 'AMZN', name: 'Amazon', price: 170.12 },
+    { symbol: 'GOOGL', name: 'Google', price: 145.60 },
+    { symbol: 'NFLX', name: 'Netflix', price: 580.20 }
+    // ... add more to reach 50
+];
+
+let liveMarket = stockList.map(s => ({ ...s, currentPrice: s.price }));
+
+// 2. LIVE TICKER ENGINE
+setInterval(() => {
+    liveMarket.forEach(stock => {
+        const change = 1 + (Math.random() * 0.004 - 0.002); // 0.2% movement
+        const oldPrice = stock.currentPrice;
+        stock.currentPrice *= change;
+
+        const el = document.getElementById(`price-${stock.symbol}`);
+        if (el) {
+            el.textContent = fmt(stock.currentPrice);
+            el.style.color = stock.currentPrice >= oldPrice ? 'var(--accent)' : 'var(--danger)';
+        }
+    });
+}, 3000);
+
+// 3. UI RENDERING
+function renderMarketUI() {
+    const grid = document.getElementById('market-grid');
+    const select = document.getElementById('stk-asset-select');
+    if (!grid) return;
+
+    grid.innerHTML = liveMarket.map(s => `
+        <div class="stock-card">
+            <span class="stk-symbol">${s.symbol}</span>
+            <span class="stk-price" id="price-${s.symbol}">${fmt(s.currentPrice)}</span>
+        </div>
+    `).join('');
+
+    select.innerHTML = liveMarket.map(s => `<option value="${s.symbol}">${s.symbol}</option>`).join('');
+}
+
+// 4. WALLET TRANSFERS
+// Function to move money FROM Savings TO Stock Wallet
+window.transferToStock = async () => {
+    const amountInput = document.getElementById('stk-transfer-amount');
+    const amt = parseFloat(amountInput.value);
+
+    if (isNaN(amt) || amt <= 0) return showToast("Enter a valid amount", "error");
+    if (amt > currentUserData.balance) return showToast("Insufficient Savings Balance", "error");
+
+    setLoading('stk-deposit-btn', true, 'Processing...');
+
+    try {
+        const userRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userRef, {
+            balance: increment(-amt),
+            stockBalance: increment(amt)
+        });
+
+        // Optional: Log this as a transaction
+        await addDoc(collection(db, "transactions"), {
+            userId: currentUser.uid,
+            type: "transfer",
+            description: "Deposit to Stock Wallet",
+            amount: amt,
+            direction: "out",
+            timestamp: serverTimestamp()
+        });
+
+        amountInput.value = '';
+        showToast(`Deposited ${fmt(amt)} to Stock Wallet`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("Transfer failed", "error");
+    } finally {
+        setLoading('stk-deposit-btn', false, 'Deposit');
+    }
+};
+
+// Function to move money FROM Stock Wallet TO Savings
+window.transferToMain = async () => {
+    const amountInput = document.getElementById('stk-transfer-amount');
+    const amt = parseFloat(amountInput.value);
+    const currentStockBal = currentUserData.stockBalance || 0;
+
+    if (isNaN(amt) || amt <= 0) return showToast("Enter a valid amount", "error");
+    if (amt > currentStockBal) return showToast("Insufficient Stock Balance", "error");
+
+    setLoading('stk-withdraw-btn', true, 'Processing...');
+
+    try {
+        const userRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userRef, {
+            balance: increment(amt),
+            stockBalance: increment(-amt)
+        });
+
+        // Optional: Log this as a transaction
+        await addDoc(collection(db, "transactions"), {
+            userId: currentUser.uid,
+            type: "deposit",
+            description: "Withdrawal from Stock Wallet",
+            amount: amt,
+            direction: "in",
+            timestamp: serverTimestamp()
+        });
+
+        amountInput.value = '';
+        showToast(`Withdrew ${fmt(amt)} to Savings`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("Withdrawal failed", "error");
+    } finally {
+        setLoading('stk-withdraw-btn', false, 'Withdraw');
+    }
+};
+
+
+// 5. TRADE EXECUTION
+window.executeStockTrade = async () => {
+    const amt = parseFloat(document.getElementById('stk-invest-amount').value);
+    const symbol = document.getElementById('stk-asset-select').value;
+    const duration = parseInt(document.getElementById('stk-duration').value);
+    const unit = document.getElementById('stk-unit').value;
+
+    if (amt > (currentUserData.stockBalance || 0)) return alert("Low Stock Funds");
+
+    const stock = liveMarket.find(s => s.symbol === symbol);
+    const entryPrice = stock.currentPrice;
+    const ms = unit === 'seconds' ? duration * 1000 : duration * 60000;
+
+    // Deduct Funds
+    await updateDoc(doc(db, 'users', currentUser.uid), { stockBalance: increment(-amt) });
+
+    // Create Trade Record
+    const tradeRef = await addDoc(collection(db, 'trades'), {
+        userId: currentUser.uid,
+        symbol,
+        entryPrice,
+        invested: amt,
+        expiry: Date.now() + ms,
+        status: 'active'
+    });
+
+    showToast(`Trade Opened: ${symbol}`);
+    
+    // Auto Resolve
+    setTimeout(() => resolveTrade(tradeRef.id), ms);
+};
+
+async function resolveTrade(tradeId) {
+    const snap = await getDoc(doc(db, 'trades', tradeId));
+    const trade = snap.data();
+    const stock = liveMarket.find(s => s.symbol === trade.symbol);
+    const exitPrice = stock.currentPrice;
+
+    const win = exitPrice > trade.entryPrice;
+    const mult = win ? (1.5 + Math.random() * 8.5) : (0.1 + Math.random() * 0.8);
+    const payout = Math.floor(trade.invested * mult);
+
+    await updateDoc(doc(db, 'users', currentUser.uid), { stockBalance: increment(payout) });
+    await updateDoc(doc(db, 'trades', tradeId), { status: 'closed', exitPrice, payout });
+
+    alert(`Trade Closed: ${trade.symbol}\nResult: ${win ? 'PROFIT' : 'LOSS'}\nReturn: ${fmt(payout)}`);
+}
+
+
+function listenForActiveTrades(uid) {
+    const q = query(
+        collection(db, 'trades'),
+        where('userId', '==', uid),
+        where('status', '==', 'active'),
+        orderBy('expiry', 'asc')
+    );
+
+    onSnapshot(q, (snapshot) => {
+        const container = document.getElementById('active-stocks-list');
+        if (snapshot.empty) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No active trades</p>';
+            return;
+        }
+
+        container.innerHTML = snapshot.docs.map(doc => {
+            const trade = doc.data();
+            const remaining = Math.max(0, Math.floor((trade.expiry - Date.now()) / 1000));
+            
+            return `
+                <div class="trade-active-row">
+                    <div>
+                        <strong style="color:var(--blue)">${trade.symbol}</strong><br>
+                        <small>Entry: ${fmt(trade.entryPrice)}</small>
+                    </div>
+                    <div style="text-align:right">
+                        <span style="color:var(--gold)">${fmt(trade.invested)}</span><br>
+                        <small id="timer-${doc.id}">${remaining}s left</small>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    });
+}
+
+
 window.submitContactForm = submitContactForm;
-
-// Update the navigate function titles list (around line 630 in your code)
-// Add 'contact: Support' to the titles object inside window.navigate
-
-
-
-
 window.doTransfer = doTransfer;
 window.doDeposit = doDeposit;
 window.doWithdraw = doWithdraw;
 window.handleLogin = handleLogin;
 window.handleSignup = handleSignup;
+window.transferToStock = transferToStock;
+window.transferToMain = transferToMain;
+window.executeStockTrade = executeStockTrade;
+window.navigate = navigate;
+window.verifyRecipient = verifyRecipient; // Added this
+window.switchTransfer = switchTransfer; // Added this
+window.handleRepayment = handleRepayment; // Added this
 
 </script>
 </body>
