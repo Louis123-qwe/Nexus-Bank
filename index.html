@@ -1337,27 +1337,50 @@ await addDoc(collection(db, "transactions"), {
   });
 }
 window.doWithdraw = async () => {
-  const amount = parseFloat(document.getElementById('wth-amount').value);
-  const desc = document.getElementById('wth-desc').value.trim() || 'Withdrawal';
-  if (!amount || amount <= 0) return showMsg('wth-msg', 'Enter a valid amount.', 'error');
-  if (amount > currentUserData.balance) return showMsg('wth-msg', `Insufficient balance. Available: ${fmt(currentUserData.balance)}.`, 'error');
+  const amountInput = document.getElementById('wth-amount');
+  const descInput = document.getElementById('wth-desc');
+  const amount = parseFloat(amountInput.value);
+  const desc = descInput.value.trim() || 'Withdrawal';
+
+  // 1. Validation
+  if (isNaN(amount) || amount <= 0) return showMsg('wth-msg', 'Enter a valid amount.', 'error');
+  if (amount > currentUserData.balance) return showMsg('wth-msg', `Insufficient balance.`, 'error');
+
   setLoading('wth-btn', true, 'Withdraw');
+
   try {
+    // 2. Database Update (Atomic Transaction)
     await runTransaction(db, async (t) => {
-      const ref = doc(db, 'users', currentUser.uid);
-      const snap = await t.get(ref);
-      if (amount > snap.data().balance) throw new Error('Insufficient balance.');
-      t.update(ref, { balance: snap.data().balance - amount });
+      const userRef = doc(db, 'users', currentUser.uid);
+      const snap = await t.get(userRef);
+      const currentBal = snap.data().balance;
+
+      if (amount > currentBal) throw new Error('Insufficient balance.');
+      
+      t.update(userRef, { balance: currentBal - amount });
     });
-    await addTx({ userId: currentUser.uid, type: 'withdraw', amount, description: desc });
-    currentUserData.balance -= amount;
-    updateUI();
-    document.getElementById('wth-amount').value = '';
-    document.getElementById('wth-desc').value = '';
+
+    // 3. Log the transaction
+    await addDoc(collection(db, 'transactions'), { 
+      userId: currentUser.uid, 
+      type: 'withdraw', 
+      amount: amount, 
+      description: desc,
+      direction: 'out', // Consistency for your dashboard math
+      timestamp: serverTimestamp() 
+    });
+
+    // 4. Reset UI (Don't manually update balance here, onSnapshot does it!)
+    amountInput.value = '';
+    descInput.value = '';
     showToast(`Withdrew ${fmt(amount)}`);
-    showMsg('wth-msg', `${fmt(amount)} withdrawn successfully!`, 'success');
-  } catch (e) { showMsg('wth-msg', e.message || 'Withdrawal failed.', 'error'); }
-  setLoading('wth-btn', false, 'Withdraw');
+    showMsg('wth-msg', `Withdrawal successful!`, 'success');
+
+  } catch (e) { 
+    showMsg('wth-msg', e.message || 'Withdrawal failed.', 'error'); 
+  } finally {
+    setLoading('wth-btn', false, 'Withdraw');
+  }
 };
 
 async function loadRecentTransactions() {
